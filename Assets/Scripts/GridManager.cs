@@ -17,7 +17,7 @@ public class GridManager : MonoBehaviour
                 var cell = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 cell.transform.position = CellToWorld(new Vector2Int(r, c));
                 cell.transform.localScale = new Vector3(cellSize, cellSize, 1f);
-                cell.transform.rotation = Quaternion.Euler(90, 0, 0);
+                cell.transform.rotation = Quaternion.Euler(0, 0, 0);
                 cell.name = $"Cell_{r}_{c}";
             }
         }
@@ -30,6 +30,6 @@ public class GridManager : MonoBehaviour
 
     public Vector3 CellToWorld(Vector2Int cell)
     {
-        return new Vector3(cell.y * cellSize, 0f, cell.x * cellSize);
+        return new Vector3(cell.y * cellSize, cell.x * cellSize, 0.0f);
     }
 }

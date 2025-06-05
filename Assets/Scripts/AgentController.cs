@@ -8,11 +8,6 @@ public class AgentController : MonoBehaviour
 
     private void Start()
     {
-        if (GetComponent<MeshRenderer>() == null)
-        {
-            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.SetParent(transform, false);
-        }
     }
 
     public void Initialize(Vector2Int cell)

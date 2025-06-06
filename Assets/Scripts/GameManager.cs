@@ -1,14 +1,26 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
     public GameObject agentPrefab;
+    public GameObject ballPrefab;
 
     private readonly List<AgentController> teamA = new();
     private readonly List<AgentController> teamB = new();
-    private readonly List<AgentController> turnOrder = new();
-    private int currentTurn;
+    private Ball ball;
+    private int currentTeam; // 0 = teamA, 1 = teamB
+
+    public static GameManager Instance { get; private set; }
+
+    public bool IsPlayerTurn => currentTeam == 0;
+    public List<AgentController> PlayerAgents => teamA;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     private void Start()
     {
@@ -16,9 +28,15 @@ public class GameManager : MonoBehaviour
         {
             agentPrefab = Resources.Load<GameObject>("Prefabs/Agent");
         }
+        if (ballPrefab == null)
+        {
+            ballPrefab = Resources.Load<GameObject>("Prefabs/Ball");
+        }
 
         SpawnTeams();
-        DetermineTurnOrder();
+        SpawnBall();
+        StartTeamTurn(0);
+        SetupUI();
     }
 
     private void SpawnTeams()
@@ -40,24 +58,57 @@ public class GameManager : MonoBehaviour
         teamA[0].hasBall = true;
     }
 
-    private void DetermineTurnOrder()
+    private void SpawnBall()
     {
-        turnOrder.Clear();
-        turnOrder.AddRange(teamA);
-        turnOrder.AddRange(teamB);
-        turnOrder.Sort((a, b) => (b.stats.awareness + Dice.Roll(20)).CompareTo(a.stats.awareness + Dice.Roll(20)));
-        currentTurn = 0;
+        var obj = Instantiate(ballPrefab);
+        ball = obj.GetComponent<Ball>();
+        ball.MoveTo(teamA[0].gridPosition);
     }
 
-    public AgentController GetCurrentAgent()
+    private void StartTeamTurn(int teamIndex)
     {
-        if (turnOrder.Count == 0)
-            return null;
-        return turnOrder[currentTurn % turnOrder.Count];
+        currentTeam = teamIndex;
+        var team = currentTeam == 0 ? teamA : teamB;
+        foreach (var a in team)
+        {
+            a.ResetActionPoints();
+        }
+
+        if (currentTeam == 1)
+        {
+            // very naive AI that immediately ends its turn
+            EndTeamTurn();
+        }
     }
 
-    public void EndTurn()
+    private void SetupUI()
     {
-        currentTurn++;
+        var canvasObj = new GameObject("UI");
+        var canvas = canvasObj.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
+        canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+
+        var textObj = new GameObject("ActionText");
+        textObj.transform.SetParent(canvasObj.transform);
+        var text = textObj.AddComponent<UnityEngine.UI.Text>();
+        text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        text.alignment = TextAnchor.UpperLeft;
+        var rt = text.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0, 1);
+        rt.anchorMax = new Vector2(0, 1);
+        rt.pivot = new Vector2(0, 1);
+        rt.anchoredPosition = new Vector2(10, -10);
+
+        var menu = canvasObj.AddComponent<ActionMenu>();
+        menu.menuText = text;
+
+        var pc = gameObject.AddComponent<PlayerController>();
+        pc.actionMenu = menu;
+    }
+
+    public void EndTeamTurn()
+    {
+        StartTeamTurn(1 - currentTeam);
     }
 }

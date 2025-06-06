@@ -13,6 +13,13 @@ public class AgentController : MonoBehaviour
         {
             var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.SetParent(transform, false);
+
+            // Set the cube's color to white
+            var renderer = cube.GetComponent<MeshRenderer>();
+            if (renderer != null)
+            {
+                renderer.material.color = Color.white;
+            }
         }
         ResetActionPoints();
     }

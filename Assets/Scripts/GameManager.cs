@@ -35,23 +35,41 @@ public class GameManager : MonoBehaviour
 
         SpawnTeams();
         SpawnBall();
+
+        // Place camera at the geometric center of the pitch using the four corners
+        var rows = GridManager.Instance.rows;
+        var columns = GridManager.Instance.columns;
+
+        var topLeft = GridManager.Instance.CellToWorld(new Vector2Int(0, 0));
+        var bottomRight = GridManager.Instance.CellToWorld(new Vector2Int(rows - 1, columns - 1));
+
+        // Calculate the average position
+        var centerWorld = (topLeft + bottomRight) * 0.5f;
+
+        var camera = Camera.main;
+        if (camera != null)
+        {
+            camera.transform.position = new Vector3(centerWorld.x, centerWorld.y, centerWorld.z - 10f); // Adjust height and distance as needed
+            //camera.transform.LookAt(new Vector3(centerWorld.x, 0f, centerWorld.z));
+        }
+
         StartTeamTurn(0);
         SetupUI();
     }
 
     private void SpawnTeams()
     {
-        int centerRow = GridManager.Instance.rows / 2;
+        int centerColumn = GridManager.Instance.columns / 2;
         for (int i = 0; i < 3; i++)
         {
             var a = Instantiate(agentPrefab);
             var ac = a.GetComponent<AgentController>();
-            ac.Initialize(new Vector2Int(centerRow - 1 + i, 3));
+            ac.Initialize(new Vector2Int(3, centerColumn - 1 + i));
             teamA.Add(ac);
 
             var b = Instantiate(agentPrefab);
             var bc = b.GetComponent<AgentController>();
-            bc.Initialize(new Vector2Int(centerRow - 1 + i, GridManager.Instance.columns - 4));
+            bc.Initialize(new Vector2Int(GridManager.Instance.rows - 4, centerColumn - 1 + i));
             teamB.Add(bc);
         }
 
@@ -92,7 +110,7 @@ public class GameManager : MonoBehaviour
         var textObj = new GameObject("ActionText");
         textObj.transform.SetParent(canvasObj.transform);
         var text = textObj.AddComponent<UnityEngine.UI.Text>();
-        text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); // Changed here
         text.alignment = TextAnchor.UpperLeft;
         var rt = text.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0, 1);

@@ -38,8 +38,11 @@ public class Ball : MonoBehaviour
 
     public void MoveTo(Vector2Int cell)
     {
+        bool cameFromTravel = isTravelling;
+
         gridPosition = cell;
         transform.position = GridManager.Instance.CellToWorld(cell);
+
         isTravelling = false;
         velocity = Vector2.zero;
     }
@@ -99,7 +102,7 @@ public class Ball : MonoBehaviour
             MoveTo(cell);
             return;
         }
-
+        
         bool bounceX = false;
         bool bounceY = false;
 

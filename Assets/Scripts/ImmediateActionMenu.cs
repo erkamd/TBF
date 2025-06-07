@@ -22,6 +22,12 @@ public class ImmediateActionMenu : MonoBehaviour
         passMode = false;
     }
 
+    private void CloseAndResume()
+    {
+        Close();
+        GameManager.Instance.FinishImmediateAction();
+    }
+
     private void UpdateText()
     {
         if (agent == null) return;
@@ -39,6 +45,7 @@ public class ImmediateActionMenu : MonoBehaviour
     }
 
     public bool IsPassMode() => passMode;
+    public bool IsOpen() => gameObject.activeSelf;
 
     public void PassOrder(Vector2Int cell)
     {
@@ -46,7 +53,7 @@ public class ImmediateActionMenu : MonoBehaviour
         passMode = false;
         Ball.Instance.PassTo(cell, true);
         Ball.Instance.AdvanceWithVelocity();
-        Close();
+        CloseAndResume();
     }
 
     private void Update()
@@ -58,7 +65,8 @@ public class ImmediateActionMenu : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             agent.hasBall = true;
-            Close();
+
+            CloseAndResume();
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
@@ -67,7 +75,7 @@ public class ImmediateActionMenu : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.Alpha3))
         {
-            Close();
+            CloseAndResume();
         }
     }
 }

@@ -15,6 +15,9 @@ public class GameManager : MonoBehaviour
     private int currentAgentIndex = 0;
     private Ball ball;
 
+    private AgentController savedSelection;
+    private bool savedMenuVisible;
+
     public static GameManager Instance { get; private set; }
 
     public AgentController CurrentAgent => turnOrder.Count > 0 ? turnOrder[currentAgentIndex] : null;
@@ -212,9 +215,27 @@ public class GameManager : MonoBehaviour
 
     public void TriggerImmediateAction(AgentController agent)
     {
+        savedSelection = playerController.selected;
+        savedMenuVisible = playerController.actionMenu.gameObject.activeSelf;
+        playerController.actionMenu.Close();
+        playerController.selectionLocked = true;
         playerController.immediateMenu.Open(agent);
     }
 
+    public void FinishImmediateAction()
+    {
+        playerController.immediateMenu.Close();
+        playerController.selectionLocked = false;
+
+        if (savedMenuVisible && savedSelection != null)
+        {
+            playerController.selected = savedSelection;
+            playerController.actionMenu.Open(savedSelection);
+        }
+        savedSelection = null;
+        savedMenuVisible = false;
+    }
+    
     public void GoalScored(int side)
     {
         Debug.Log($"Goal scored on {(side < 0 ? "left" : "right")} side!");
@@ -237,9 +258,10 @@ public class GameManager : MonoBehaviour
 
     public void OnGridCellClicked(Vector2Int clickedPosition)
     {
-        if (playerController.immediateMenu != null && playerController.immediateMenu.IsPassMode())
+        if (playerController.immediateMenu != null && playerController.immediateMenu.IsOpen())
         {
-            playerController.immediateMenu.PassOrder(clickedPosition);
+            if (playerController.immediateMenu.IsPassMode())
+                playerController.immediateMenu.PassOrder(clickedPosition);
             return;
         }
 

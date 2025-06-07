@@ -7,10 +7,16 @@ public class PlayerController : MonoBehaviour
     public ImmediateActionMenu immediateMenu;
 
     [System.NonSerialized]
+    public bool selectionLocked = false;
+
+    [System.NonSerialized]
     public AgentController selected;
 
     private void Update()
     {
+        if (selectionLocked)
+            return;
+
         if (Input.GetMouseButtonUp(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);

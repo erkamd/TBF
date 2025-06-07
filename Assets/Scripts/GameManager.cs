@@ -47,11 +47,11 @@ public class GameManager : MonoBehaviour
         SpawnBall();
 
         // Place camera at the geometric center of the pitch using the four corners
-        var rows = GridManager.Instance.rows;
-        var columns = GridManager.Instance.columns;
+        var width = GridManager.Instance.width;
+        var height = GridManager.Instance.height;
 
         var topLeft = GridManager.Instance.CellToWorld(new Vector2Int(0, 0));
-        var bottomRight = GridManager.Instance.CellToWorld(new Vector2Int(rows - 1, columns - 1));
+        var bottomRight = GridManager.Instance.CellToWorld(new Vector2Int(width - 1, height - 1));
 
         // Calculate the average position
         var centerWorld = (topLeft + bottomRight) * 0.5f;
@@ -72,7 +72,7 @@ public class GameManager : MonoBehaviour
     private void SpawnTeams(int gap)
     {
         int numAgents = 3;
-        int centerColumn = GridManager.Instance.columns / 2;
+        int centerColumn = GridManager.Instance.height / 2;
 
         int startOffset = -((numAgents - 1) / 2) * gap;
 
@@ -93,7 +93,7 @@ public class GameManager : MonoBehaviour
             var bc = b.GetComponent<AgentController>();
             bc.agentColor = Color.red;
             bc.jerseyNumber = jersey++;
-            bc.Initialize(new Vector2Int(GridManager.Instance.rows - 4, col));
+            bc.Initialize(new Vector2Int(GridManager.Instance.width - 4, col));
             teamB.Add(bc);
             allAgents.Add(bc);
         }

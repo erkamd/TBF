@@ -115,10 +115,10 @@ public class Ball : MonoBehaviour
             bounceX = true;
             cell.x = 0;
         }
-        else if (cell.x >= GridManager.Instance.rows)
+        else if (cell.x >= GridManager.Instance.width)
         {
             bounceX = true;
-            cell.x = GridManager.Instance.rows - 1;
+            cell.x = GridManager.Instance.width - 1;
         }
 
         if (cell.y < 0)
@@ -129,12 +129,12 @@ public class Ball : MonoBehaviour
                 cell.y = 0;
             }
         }
-        else if (cell.y >= GridManager.Instance.columns)
+        else if (cell.y >= GridManager.Instance.height)
         {
-            if (!GridManager.Instance.IsGoalCell(new Vector2Int(cell.x, GridManager.Instance.columns), out _))
+            if (!GridManager.Instance.IsGoalCell(new Vector2Int(cell.x, GridManager.Instance.height), out _))
             {
                 bounceY = true;
-                cell.y = GridManager.Instance.columns - 1;
+                cell.y = GridManager.Instance.height - 1;
             }
         }
 

@@ -1,12 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Ball : MonoBehaviour
 {
     public static Ball Instance { get; private set; }
     public Vector2Int gridPosition;
-    private Queue<Vector2Int> travelPath = new Queue<Vector2Int>();
+    private Vector2Int velocity = Vector2Int.zero;
+    private int remainingSteps = 0;
     private bool isTravelling = false;
 
     private void Awake()
@@ -37,6 +36,18 @@ public class Ball : MonoBehaviour
     {
         gridPosition = cell;
         transform.position = GridManager.Instance.CellToWorld(cell);
+
+        var agent = GameManager.Instance.GetAgentAtCell(cell);
+        if (agent != null)
+        {
+            foreach (var a in GameManager.Instance.AllAgents)
+                a.hasBall = false;
+
+            agent.hasBall = true;
+            isTravelling = false;
+            velocity = Vector2Int.zero;
+            remainingSteps = 0;
+        }
     }
 
     // Call this to start a pass
@@ -52,46 +63,34 @@ public class Ball : MonoBehaviour
             return;
         }
 
-        // Build path (straight line, diagonal allowed)
-        travelPath.Clear();
-        Vector2Int current = gridPosition;
-        while (current != targetCell)
-        {
-            current = GetNextStep(current, targetCell);
-            travelPath.Enqueue(current);
-        }
-
-        isTravelling = true;
-        StartCoroutine(TravelPathCoroutine());
-    }
-
-    private IEnumerator TravelPathCoroutine()
-    {
-        while (travelPath.Count > 0)
-        {
-            Vector2Int next = travelPath.Dequeue();
-            MoveTo(next);
-            // Wait for a turn or a fixed time (simulate turn-based)
-            yield return new WaitForSeconds(0.5f); // Replace with turn event if you have one
-        }
-        isTravelling = false;
-    }
-
-    private Vector2Int GetNextStep(Vector2Int current, Vector2Int target)
-    {
-        int dx = target.x - current.x;
-        int dy = target.y - current.y;
+        int dx = targetCell.x - gridPosition.x;
+        int dy = targetCell.y - gridPosition.y;
         int stepX = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
         int stepY = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
+        velocity = new Vector2Int(stepX, stepY);
+        remainingSteps = Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy));
+        isTravelling = true;
+    }
 
-        // Move diagonally if possible
-        if (dx != 0 && dy != 0)
-            return new Vector2Int(current.x + stepX, current.y + stepY);
-        if (dx != 0)
-            return new Vector2Int(current.x + stepX, current.y);
-        if (dy != 0)
-            return new Vector2Int(current.x, current.y + stepY);
-        return current;
+    public void AdvanceWithVelocity()
+    {
+        if (!isTravelling)
+            return;
+
+        if (remainingSteps > 0)
+        {
+            Vector2Int next = gridPosition + velocity;
+            next.x = Mathf.Clamp(next.x, 0, GridManager.Instance.rows - 1);
+            next.y = Mathf.Clamp(next.y, 0, GridManager.Instance.columns - 1);
+            MoveTo(next);
+            remainingSteps--;
+        }
+
+        if (remainingSteps <= 0)
+        {
+            isTravelling = false;
+            velocity = Vector2Int.zero;
+        }
     }
 
     private bool IsNeighbor(Vector2Int a, Vector2Int b)

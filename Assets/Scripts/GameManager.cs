@@ -9,15 +9,20 @@ public class GameManager : MonoBehaviour
 
     private readonly List<AgentController> teamA = new();
     private readonly List<AgentController> teamB = new();
+    private readonly List<AgentController> allAgents = new();
+    private readonly List<AgentController> turnOrder = new();
+    private int currentAgentIndex = 0;
     private Ball ball;
-    private int currentTeam; // 0 = teamA, 1 = teamB
 
     public static GameManager Instance { get; private set; }
 
-    public bool IsPlayerTurn => currentTeam == 0;
+    public AgentController CurrentAgent => turnOrder.Count > 0 ? turnOrder[currentAgentIndex] : null;
+    public bool IsPlayerTurn => teamA.Contains(CurrentAgent);
     public List<AgentController> PlayerAgents => teamA;
+    public List<AgentController> AllAgents => allAgents;
 
     public PlayerController playerController;
+    private UnityEngine.UI.Text orderText;
 
     [Header("Team Spawn Settings")]
     public int agentGap = 1; // Set this in the Inspector
@@ -58,8 +63,8 @@ public class GameManager : MonoBehaviour
             //camera.transform.LookAt(new Vector3(centerWorld.x, 0f, centerWorld.z));
         }
 
-        StartTeamTurn(0);
         SetupUI();
+        StartCycle();
     }
 
     private void SpawnTeams(int gap)
@@ -67,24 +72,28 @@ public class GameManager : MonoBehaviour
         int numAgents = 3;
         int centerColumn = GridManager.Instance.columns / 2;
 
-        // For odd numAgents, this will center them; for even, it will be just left of center
         int startOffset = -((numAgents - 1) / 2) * gap;
 
+        int jersey = 1;
         for (int i = 0; i < numAgents; i++)
         {
             int col = centerColumn + startOffset + i * gap;
 
             var a = Instantiate(agentPrefab);
             var ac = a.GetComponent<AgentController>();
-            ac.agentColor = Color.blue; // Set color for team A
+            ac.agentColor = Color.blue;
+            ac.jerseyNumber = jersey++;
             ac.Initialize(new Vector2Int(3, col));
             teamA.Add(ac);
+            allAgents.Add(ac);
 
             var b = Instantiate(agentPrefab);
             var bc = b.GetComponent<AgentController>();
-            bc.agentColor = Color.red; // Set color for team B
+            bc.agentColor = Color.red;
+            bc.jerseyNumber = jersey++;
             bc.Initialize(new Vector2Int(GridManager.Instance.rows - 4, col));
             teamB.Add(bc);
+            allAgents.Add(bc);
         }
 
         teamA[0].hasBall = true;
@@ -97,20 +106,45 @@ public class GameManager : MonoBehaviour
         ball.MoveTo(teamA[0].gridPosition);
     }
 
-    private void StartTeamTurn(int teamIndex)
+    private void StartCycle()
     {
-        currentTeam = teamIndex;
-        var team = currentTeam == 0 ? teamA : teamB;
-        foreach (var a in team)
+        foreach (var a in allAgents)
         {
             a.ResetActionPoints();
         }
 
-        if (currentTeam == 1)
+        turnOrder.Clear();
+        var copy = new List<AgentController>(allAgents);
+        while (copy.Count > 0)
         {
-            // very naive AI that immediately ends its turn
-            EndTeamTurn();
+            int index = Random.Range(0, copy.Count);
+            turnOrder.Add(copy[index]);
+            copy.RemoveAt(index);
         }
+
+        currentAgentIndex = 0;
+        UpdateTurnOrderDisplay();
+        StartAgentTurn();
+    }
+
+    private void StartAgentTurn()
+    {
+        if (CurrentAgent == null)
+            return;
+
+        if (!IsPlayerTurn)
+        {
+            EndAgentTurn();
+        }
+    }
+
+    private void UpdateTurnOrderDisplay()
+    {
+        if (orderText == null) return;
+        var nums = new List<string>();
+        foreach (var a in turnOrder)
+            nums.Add(a.jerseyNumber.ToString());
+        orderText.text = "Order: " + string.Join(" ", nums);
     }
 
     private void SetupUI()
@@ -121,16 +155,28 @@ public class GameManager : MonoBehaviour
         canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
         canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
+        var orderObj = new GameObject("OrderText");
+        orderObj.transform.SetParent(canvasObj.transform);
+        var order = orderObj.AddComponent<UnityEngine.UI.Text>();
+        order.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        order.alignment = TextAnchor.UpperCenter;
+        var rtOrder = order.GetComponent<RectTransform>();
+        rtOrder.anchorMin = new Vector2(0.5f, 1);
+        rtOrder.anchorMax = new Vector2(0.5f, 1);
+        rtOrder.pivot = new Vector2(0.5f, 1);
+        rtOrder.anchoredPosition = new Vector2(0, -10);
+        orderText = order;
+
         var textObj = new GameObject("ActionText");
         textObj.transform.SetParent(canvasObj.transform);
         var text = textObj.AddComponent<UnityEngine.UI.Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); // Changed here
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         text.alignment = TextAnchor.UpperLeft;
         var rt = text.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0, 1);
         rt.anchorMax = new Vector2(0, 1);
         rt.pivot = new Vector2(0, 1);
-        rt.anchoredPosition = new Vector2(10, -10);
+        rt.anchoredPosition = new Vector2(10, -30);
 
         var menu = canvasObj.AddComponent<ActionMenu>();
         menu.menuText = text;
@@ -138,9 +184,40 @@ public class GameManager : MonoBehaviour
         playerController.actionMenu = menu;
     }
 
-    public void EndTeamTurn()
+    public void EndAgentTurn()
     {
-        StartTeamTurn(1 - currentTeam);
+        if (CurrentAgent != null)
+        {
+            playerController.actionMenu.Close();
+            playerController.selected = null;
+        }
+
+        ball.AdvanceWithVelocity();
+
+        currentAgentIndex++;
+        if (currentAgentIndex >= turnOrder.Count)
+        {
+            StartCycle();
+        }
+        else
+        {
+            StartAgentTurn();
+        }
+    }
+
+    public bool IsCellOccupied(Vector2Int cell)
+    {
+        return GetAgentAtCell(cell) != null;
+    }
+
+    public AgentController GetAgentAtCell(Vector2Int cell)
+    {
+        foreach (var a in allAgents)
+        {
+            if (a.gridPosition == cell)
+                return a;
+        }
+        return null;
     }
 
     public void OnGridCellClicked(Vector2Int clickedPosition)

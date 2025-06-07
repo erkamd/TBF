@@ -9,5 +9,5 @@ This project contains a minimal prototype of a turn based football game built wi
 3. Press Play to generate the grid and spawn the placeholder agents and ball.
 
 Agents and grid visuals are simple primitives. GameManager automatically loads the agent and ball prefabs from `Resources/Prefabs`.
-During the player's turn you can click one of your agents to open a minimal menu
-showing the remaining action points and simple actions.
+At the start of each cycle the turn order of all agents is randomized and displayed at the top of the screen using their jersey numbers. Agents take turns one after another regardless of team. When an agent finishes their actions the ball moves one step with its current velocity if it is not possessed by anyone.
+Click your active agent to open a minimal menu showing the remaining action points and simple actions.

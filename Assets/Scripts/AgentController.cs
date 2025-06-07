@@ -6,6 +6,7 @@ public class AgentController : MonoBehaviour
     public Vector2Int gridPosition;
     public bool hasBall;
     public int actionPoints;
+    public int jerseyNumber;
     public Color agentColor = Color.white; // Default to white
 
     private void Start()

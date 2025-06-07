@@ -51,7 +51,7 @@ MonoBehaviour:
     defending: 10
     ballControl: 10
     awareness: 10
-    speed: 5
+    speed: 3
   gridPosition: {x: 0, y: 0}
   hasBall: 0
   actionPoints: 0

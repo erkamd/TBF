@@ -19,7 +19,7 @@ public class PlayerController : MonoBehaviour
             if (Physics.Raycast(ray, out var hit))
             {
                 var agent = hit.collider.GetComponentInParent<AgentController>();
-                if (agent != null && GameManager.Instance.PlayerAgents.Contains(agent))
+                if (agent != null && agent == GameManager.Instance.CurrentAgent)
                 {
                     SelectAgent(agent);
                 }

@@ -56,6 +56,10 @@ public class ActionMenu : MonoBehaviour
                 Ball.Instance.PassTo(targetCell);
             }
             Debug.Log($"Passed ball to {targetCell}");
+            if (agent.actionPoints == 0)
+            {
+                GameManager.Instance.EndAgentTurn();
+            }
         }
         else
         {
@@ -70,6 +74,10 @@ public class ActionMenu : MonoBehaviour
         while (agent.actionPoints > 0 && agent.gridPosition != targetCell)
         {
             Vector2Int nextStep = GetNextStep(agent.gridPosition, targetCell);
+            var occupant = GameManager.Instance.GetAgentAtCell(nextStep);
+            if (occupant != null && occupant != agent)
+                break;
+
             if (nextStep == agent.gridPosition) // No progress possible
                 break;
 
@@ -83,6 +91,11 @@ public class ActionMenu : MonoBehaviour
                 break;
             }
             yield return new WaitForSeconds(0.2f); // Adjust speed as needed
+        }
+
+        if (agent.actionPoints == 0)
+        {
+            GameManager.Instance.EndAgentTurn();
         }
     }
 
@@ -121,6 +134,7 @@ public class ActionMenu : MonoBehaviour
             agent.actionPoints = 0;
             passMode = false;
             UpdateText();
+            GameManager.Instance.EndAgentTurn();
         }
     }
 }

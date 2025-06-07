@@ -6,9 +6,13 @@ public class GridManager : MonoBehaviour
 
     public int rows = 15;
     public int columns = 40;
+    [Tooltip("Number of rows that make up the goal mouth")] public int goalWidth = 3;
     public float cellSize = 1f;
     public GameObject cellPrefab; // Assign this in the Inspector
     public GameObject gridCanvas; // Assign this in the Inspector
+
+    private int GoalStartRow => Mathf.Max(0, (rows - goalWidth) / 2);
+    private int GoalEndRow => Mathf.Min(rows - 1, GoalStartRow + goalWidth - 1);
 
     private void Awake()
     {
@@ -61,10 +65,69 @@ public class GridManager : MonoBehaviour
                 }
             }
         }
+
+        // Goal cells one column outside the pitch
+        for (int r = GoalStartRow; r <= GoalEndRow; r++)
+        {
+            CreateGoalCell(gridParent.transform, r, -1, "LeftGoal");
+            CreateGoalCell(gridParent.transform, r, columns, "RightGoal");
+        }
+    }
+
+    private void CreateGoalCell(Transform parent, int row, int column, string name)
+    {
+        GameObject cell;
+        if (cellPrefab != null)
+            cell = Instantiate(cellPrefab);
+        else
+            cell = GameObject.CreatePrimitive(PrimitiveType.Quad);
+
+        cell.transform.SetParent(parent, false);
+        cell.name = $"{name}_{row}";
+
+        var gridCell = cell.GetComponent<GridCell>();
+        if (gridCell != null)
+            gridCell.gridPosition = new Vector2Int(row, column);
+
+        var rect = cell.GetComponent<RectTransform>();
+        if (rect != null)
+        {
+            rect.anchoredPosition = new Vector2(row * cellSize, column * cellSize);
+            rect.sizeDelta = new Vector2(cellSize, cellSize);
+        }
+        else
+        {
+            cell.transform.position = CellToWorld(new Vector2Int(row, column));
+            cell.transform.localScale = new Vector3(cellSize, cellSize, 1f);
+            cell.transform.rotation = Quaternion.Euler(0, 0, 0);
+        }
+
+        var renderer = cell.GetComponent<MeshRenderer>();
+        if (renderer != null)
+            renderer.material.color = Color.green;
     }
 
     public Vector3 CellToWorld(Vector2Int cell)
     {
         return new Vector3(cell.x * cellSize, cell.y * cellSize);
+    }
+
+    public bool IsGoalCell(Vector2Int cell, out int side)
+    {
+        side = 0;
+        if (cell.x >= GoalStartRow && cell.x <= GoalEndRow)
+        {
+            if (cell.y == -1)
+            {
+                side = -1;
+                return true;
+            }
+            if (cell.y == columns)
+            {
+                side = 1;
+                return true;
+            }
+        }
+        return false;
     }
 }

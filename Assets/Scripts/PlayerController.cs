@@ -4,6 +4,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public ActionMenu actionMenu;
+    public ImmediateActionMenu immediateMenu;
 
     [System.NonSerialized]
     public AgentController selected;

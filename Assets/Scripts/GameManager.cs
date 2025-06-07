@@ -169,6 +169,23 @@ public class GameManager : MonoBehaviour
         menu.menuText = text;
 
         playerController.actionMenu = menu;
+
+        var immObj = new GameObject("ImmediateText");
+        immObj.transform.SetParent(canvasObj.transform);
+        var immText = immObj.AddComponent<UnityEngine.UI.Text>();
+        immText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        immText.alignment = TextAnchor.UpperLeft;
+        var rt2 = immText.GetComponent<RectTransform>();
+        rt2.anchorMin = new Vector2(0, 1);
+        rt2.anchorMax = new Vector2(0, 1);
+        rt2.pivot = new Vector2(0, 1);
+        rt2.anchoredPosition = new Vector2(10, -120);
+
+        var immMenu = canvasObj.AddComponent<ImmediateActionMenu>();
+        immMenu.menuText = immText;
+        immMenu.Close();
+
+        playerController.immediateMenu = immMenu;
     }
 
     public void EndAgentTurn()
@@ -193,6 +210,16 @@ public class GameManager : MonoBehaviour
         UpdateTurnOrderDisplay();
     }
 
+    public void TriggerImmediateAction(AgentController agent)
+    {
+        playerController.immediateMenu.Open(agent);
+    }
+
+    public void GoalScored(int side)
+    {
+        Debug.Log($"Goal scored on {(side < 0 ? "left" : "right")} side!");
+    }
+
     public bool IsCellOccupied(Vector2Int cell)
     {
         return GetAgentAtCell(cell) != null;
@@ -210,6 +237,12 @@ public class GameManager : MonoBehaviour
 
     public void OnGridCellClicked(Vector2Int clickedPosition)
     {
+        if (playerController.immediateMenu != null && playerController.immediateMenu.IsPassMode())
+        {
+            playerController.immediateMenu.PassOrder(clickedPosition);
+            return;
+        }
+
         if (playerController.selected)
         {
             if (playerController.actionMenu.IsPassMode())

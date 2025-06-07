@@ -38,6 +38,8 @@ public class Ball : MonoBehaviour
 
     public void MoveTo(Vector2Int cell)
     {
+        bool cameFromTravel = isTravelling;
+
         gridPosition = cell;
         transform.position = GridManager.Instance.CellToWorld(cell);
 
@@ -47,7 +49,16 @@ public class Ball : MonoBehaviour
             foreach (var a in GameManager.Instance.AllAgents)
                 a.hasBall = false;
 
-            agent.hasBall = true;
+            if (cameFromTravel)
+                GameManager.Instance.TriggerImmediateAction(agent);
+            else
+                agent.hasBall = true;
+
+            isTravelling = false;
+            velocity = Vector2.zero;
+        }
+        else
+        {
             isTravelling = false;
             velocity = Vector2.zero;
         }
@@ -84,11 +95,57 @@ public class Ball : MonoBehaviour
         Vector2Int cell = new Vector2Int(
             Mathf.RoundToInt(transform.position.x / GridManager.Instance.cellSize),
             Mathf.RoundToInt(transform.position.y / GridManager.Instance.cellSize));
-
-        cell.x = Mathf.Clamp(cell.x, 0, GridManager.Instance.rows - 1);
-        cell.y = Mathf.Clamp(cell.y, 0, GridManager.Instance.columns - 1);
-
         gridPosition = cell;
+
+        int side;
+        if (GridManager.Instance.IsGoalCell(cell, out side))
+        {
+            isTravelling = false;
+            velocity = Vector2.zero;
+            GameManager.Instance.GoalScored(side);
+            MoveTo(cell);
+            return;
+        }
+
+        bool bounceX = false;
+        bool bounceY = false;
+
+        if (cell.x < 0)
+        {
+            bounceX = true;
+            cell.x = 0;
+        }
+        else if (cell.x >= GridManager.Instance.rows)
+        {
+            bounceX = true;
+            cell.x = GridManager.Instance.rows - 1;
+        }
+
+        if (cell.y < 0)
+        {
+            if (!GridManager.Instance.IsGoalCell(new Vector2Int(cell.x, -1), out _))
+            {
+                bounceY = true;
+                cell.y = 0;
+            }
+        }
+        else if (cell.y >= GridManager.Instance.columns)
+        {
+            if (!GridManager.Instance.IsGoalCell(new Vector2Int(cell.x, GridManager.Instance.columns), out _))
+            {
+                bounceY = true;
+                cell.y = GridManager.Instance.columns - 1;
+            }
+        }
+
+        if (bounceX) velocity.x = -velocity.x;
+        if (bounceY) velocity.y = -velocity.y;
+
+        if (bounceX || bounceY)
+        {
+            transform.position = GridManager.Instance.CellToWorld(cell);
+            gridPosition = cell;
+        }
 
         if (velocity.magnitude < stopThreshold)
         {

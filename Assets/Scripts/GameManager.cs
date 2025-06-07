@@ -15,6 +15,9 @@ public class GameManager : MonoBehaviour
     private int currentAgentIndex = 0;
     private Ball ball;
 
+    private AgentController savedSelection;
+    private bool savedMenuVisible;
+
     public static GameManager Instance { get; private set; }
 
     public AgentController CurrentAgent => turnOrder.Count > 0 ? turnOrder[currentAgentIndex] : null;
@@ -47,11 +50,11 @@ public class GameManager : MonoBehaviour
         SpawnBall();
 
         // Place camera at the geometric center of the pitch using the four corners
-        var rows = GridManager.Instance.rows;
-        var columns = GridManager.Instance.columns;
+        var width = GridManager.Instance.width;
+        var height = GridManager.Instance.height;
 
         var topLeft = GridManager.Instance.CellToWorld(new Vector2Int(0, 0));
-        var bottomRight = GridManager.Instance.CellToWorld(new Vector2Int(rows - 1, columns - 1));
+        var bottomRight = GridManager.Instance.CellToWorld(new Vector2Int(width - 1, height - 1));
 
         // Calculate the average position
         var centerWorld = (topLeft + bottomRight) * 0.5f;
@@ -72,7 +75,7 @@ public class GameManager : MonoBehaviour
     private void SpawnTeams(int gap)
     {
         int numAgents = 3;
-        int centerColumn = GridManager.Instance.columns / 2;
+        int centerColumn = GridManager.Instance.height / 2;
 
         int startOffset = -((numAgents - 1) / 2) * gap;
 
@@ -93,7 +96,7 @@ public class GameManager : MonoBehaviour
             var bc = b.GetComponent<AgentController>();
             bc.agentColor = Color.red;
             bc.jerseyNumber = jersey++;
-            bc.Initialize(new Vector2Int(GridManager.Instance.rows - 4, col));
+            bc.Initialize(new Vector2Int(GridManager.Instance.width - 4, col));
             teamB.Add(bc);
             allAgents.Add(bc);
         }
@@ -169,6 +172,23 @@ public class GameManager : MonoBehaviour
         menu.menuText = text;
 
         playerController.actionMenu = menu;
+
+        var immObj = new GameObject("ImmediateText");
+        immObj.transform.SetParent(canvasObj.transform);
+        var immText = immObj.AddComponent<UnityEngine.UI.Text>();
+        immText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        immText.alignment = TextAnchor.UpperLeft;
+        var rt2 = immText.GetComponent<RectTransform>();
+        rt2.anchorMin = new Vector2(0, 1);
+        rt2.anchorMax = new Vector2(0, 1);
+        rt2.pivot = new Vector2(0, 1);
+        rt2.anchoredPosition = new Vector2(10, -120);
+
+        var immMenu = canvasObj.AddComponent<ImmediateActionMenu>();
+        immMenu.menuText = immText;
+        immMenu.Close();
+
+        playerController.immediateMenu = immMenu;
     }
 
     public void EndAgentTurn()
@@ -193,6 +213,34 @@ public class GameManager : MonoBehaviour
         UpdateTurnOrderDisplay();
     }
 
+    public void TriggerImmediateAction(AgentController agent)
+    {
+        savedSelection = playerController.selected;
+        savedMenuVisible = playerController.actionMenu.gameObject.activeSelf;
+        playerController.actionMenu.Close();
+        playerController.selectionLocked = true;
+        playerController.immediateMenu.Open(agent);
+    }
+
+    public void FinishImmediateAction()
+    {
+        playerController.immediateMenu.Close();
+        playerController.selectionLocked = false;
+
+        if (savedMenuVisible && savedSelection != null)
+        {
+            playerController.selected = savedSelection;
+            playerController.actionMenu.Open(savedSelection);
+        }
+        savedSelection = null;
+        savedMenuVisible = false;
+    }
+
+    public void GoalScored(int side)
+    {
+        Debug.Log($"Goal scored on {(side < 0 ? "left" : "right")} side!");
+    }
+
     public bool IsCellOccupied(Vector2Int cell)
     {
         return GetAgentAtCell(cell) != null;
@@ -210,6 +258,13 @@ public class GameManager : MonoBehaviour
 
     public void OnGridCellClicked(Vector2Int clickedPosition)
     {
+        if (playerController.immediateMenu != null && playerController.immediateMenu.IsOpen())
+        {
+            if (playerController.immediateMenu.IsPassMode())
+                playerController.immediateMenu.PassOrder(clickedPosition);
+            return;
+        }
+
         if (playerController.selected)
         {
             if (playerController.actionMenu.IsPassMode())

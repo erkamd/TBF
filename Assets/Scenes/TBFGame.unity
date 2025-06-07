@@ -395,8 +395,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab1cd10ee0c04c1abe6cb3a852add228, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  rows: 15
-  columns: 40
+  width: 15
+  height: 40
   cellSize: 1
 --- !u!114 &730000002
 MonoBehaviour:

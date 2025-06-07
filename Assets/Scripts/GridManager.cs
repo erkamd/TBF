@@ -11,8 +11,8 @@ public class GridManager : MonoBehaviour
     public GameObject cellPrefab; // Assign this in the Inspector
     public GameObject gridCanvas; // Assign this in the Inspector
 
-    private int GoalStartX => Mathf.Max(0, (width - goalWidth) / 2);
-    private int GoalEndX => Mathf.Min(width - 1, GoalStartX + goalWidth - 1);
+    private int GoalStartY => Mathf.Max(0, (height - goalWidth) / 2);
+    private int GoalEndY => Mathf.Min(height - 1, GoalStartY + goalWidth - 1);
 
     private void Awake()
     {
@@ -67,10 +67,10 @@ public class GridManager : MonoBehaviour
         }
 
         // Goal cells one cell outside the pitch
-        for (int x = GoalStartX; x <= GoalEndX; x++)
+        for (int y = GoalStartY; y <= GoalEndY; y++)
         {
-            CreateGoalCell(gridParent.transform, x, -1, "LeftGoal");
-            CreateGoalCell(gridParent.transform, x, height, "RightGoal");
+            CreateGoalCell(gridParent.transform, -1, y, "LeftGoal");
+            CreateGoalCell(gridParent.transform, width, y, "RightGoal");
         }
     }
 
@@ -115,7 +115,7 @@ public class GridManager : MonoBehaviour
     public bool IsGoalCell(Vector2Int cell, out int side)
     {
         side = 0;
-        if (cell.x >= GoalStartX && cell.x <= GoalEndX)
+        if (cell.x >= GoalStartY && cell.x <= GoalEndY)
         {
             if (cell.y == -1)
             {

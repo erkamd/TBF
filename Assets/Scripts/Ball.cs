@@ -22,13 +22,13 @@ public class Ball : MonoBehaviour
 
             MeshRenderer meshRenderer = sphere.GetComponent<MeshRenderer>();
             if (meshRenderer != null)
-                meshRenderer.material.color = Color.white;
+                meshRenderer.material.color = new Color(1.0f, 1.0f, 1.0f, 0.2f);
 
             sphere.GetComponent<Collider>().enabled = false;
 
             sphere.transform.SetParent(transform, false);
             sphere.transform.localPosition = new Vector3(0, 0, -1);
-            sphere.transform.localScale = Vector3.one * 0.5f;
+            sphere.transform.localScale = Vector3.one;
         }
     }
 

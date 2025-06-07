@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,12 +18,11 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     public AgentController CurrentAgent => turnOrder.Count > 0 ? turnOrder[currentAgentIndex] : null;
-    public bool IsPlayerTurn => teamA.Contains(CurrentAgent);
     public List<AgentController> PlayerAgents => teamA;
     public List<AgentController> AllAgents => allAgents;
 
     public PlayerController playerController;
-    private UnityEngine.UI.Text orderText;
+    public TextMeshProUGUI orderText;
 
     [Header("Team Spawn Settings")]
     public int agentGap = 1; // Set this in the Inspector
@@ -65,6 +65,8 @@ public class GameManager : MonoBehaviour
 
         SetupUI();
         StartCycle();
+
+        UpdateTurnOrderDisplay();
     }
 
     private void SpawnTeams(int gap)
@@ -123,7 +125,6 @@ public class GameManager : MonoBehaviour
         }
 
         currentAgentIndex = 0;
-        UpdateTurnOrderDisplay();
         StartAgentTurn();
     }
 
@@ -131,19 +132,17 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentAgent == null)
             return;
-
-        if (!IsPlayerTurn)
-        {
-            EndAgentTurn();
-        }
     }
 
     private void UpdateTurnOrderDisplay()
     {
         if (orderText == null) return;
         var nums = new List<string>();
-        foreach (var a in turnOrder)
-            nums.Add(a.jerseyNumber.ToString());
+        for (int i = 0; i < turnOrder.Count; i++)
+        {
+            var color = (i == currentAgentIndex) ? "#FFFF00" : "#FFFFFF"; // Yellow for current, white for others
+            nums.Add($"<color={color}>{turnOrder[i].jerseyNumber}</color>");
+        }
         orderText.text = "Order: " + string.Join(" ", nums);
     }
 
@@ -154,18 +153,6 @@ public class GameManager : MonoBehaviour
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
         canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-
-        var orderObj = new GameObject("OrderText");
-        orderObj.transform.SetParent(canvasObj.transform);
-        var order = orderObj.AddComponent<UnityEngine.UI.Text>();
-        order.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        order.alignment = TextAnchor.UpperCenter;
-        var rtOrder = order.GetComponent<RectTransform>();
-        rtOrder.anchorMin = new Vector2(0.5f, 1);
-        rtOrder.anchorMax = new Vector2(0.5f, 1);
-        rtOrder.pivot = new Vector2(0.5f, 1);
-        rtOrder.anchoredPosition = new Vector2(0, -10);
-        orderText = order;
 
         var textObj = new GameObject("ActionText");
         textObj.transform.SetParent(canvasObj.transform);
@@ -203,6 +190,8 @@ public class GameManager : MonoBehaviour
         {
             StartAgentTurn();
         }
+
+        UpdateTurnOrderDisplay();
     }
 
     public bool IsCellOccupied(Vector2Int cell)

@@ -10,9 +10,6 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (!GameManager.Instance.IsPlayerTurn)
-            return;
-
         if (Input.GetMouseButtonUp(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);

@@ -4,9 +4,13 @@ public class Ball : MonoBehaviour
 {
     public static Ball Instance { get; private set; }
     public Vector2Int gridPosition;
-    private Vector2Int velocity = Vector2Int.zero;
-    private int remainingSteps = 0;
+    private Vector2 velocity = Vector2.zero;
     private bool isTravelling = false;
+
+    [SerializeField]
+    private float friction = 0.9f;
+
+    private const float stopThreshold = 0.05f;
 
     private void Awake()
     {
@@ -45,31 +49,28 @@ public class Ball : MonoBehaviour
 
             agent.hasBall = true;
             isTravelling = false;
-            velocity = Vector2Int.zero;
-            remainingSteps = 0;
+            velocity = Vector2.zero;
         }
     }
 
     // Call this to start a pass
-    public void PassTo(Vector2Int targetCell)
+    public void PassTo(Vector2Int targetCell, bool hard)
     {
         if (isTravelling)
             return;
 
-        // If already at or next to the target, just move instantly
-        if (IsNeighbor(gridPosition, targetCell))
-        {
-            MoveTo(targetCell);
-            return;
-        }
+        Vector3 targetWorld = GridManager.Instance.CellToWorld(targetCell);
+        Vector3 startWorld = transform.position;
+        Vector2 delta = new Vector2(targetWorld.x - startWorld.x, targetWorld.y - startWorld.y);
 
-        int dx = targetCell.x - gridPosition.x;
-        int dy = targetCell.y - gridPosition.y;
-        int stepX = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
-        int stepY = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
-        velocity = new Vector2Int(stepX, stepY);
-        remainingSteps = Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy));
+        velocity = delta * (1f - friction);
+        if (hard)
+            velocity *= 1.5f;
+
         isTravelling = true;
+
+        foreach (var a in GameManager.Instance.AllAgents)
+            a.hasBall = false;
     }
 
     public void AdvanceWithVelocity()
@@ -77,27 +78,29 @@ public class Ball : MonoBehaviour
         if (!isTravelling)
             return;
 
-        if (remainingSteps > 0)
+        transform.position += (Vector3)velocity;
+        velocity *= friction;
+
+        Vector2Int cell = new Vector2Int(
+            Mathf.RoundToInt(transform.position.x / GridManager.Instance.cellSize),
+            Mathf.RoundToInt(transform.position.y / GridManager.Instance.cellSize));
+
+        cell.x = Mathf.Clamp(cell.x, 0, GridManager.Instance.rows - 1);
+        cell.y = Mathf.Clamp(cell.y, 0, GridManager.Instance.columns - 1);
+
+        gridPosition = cell;
+
+        var agent = GameManager.Instance.GetAgentAtCell(cell);
+        if (agent != null)
         {
-            Vector2Int next = gridPosition + velocity;
-            next.x = Mathf.Clamp(next.x, 0, GridManager.Instance.rows - 1);
-            next.y = Mathf.Clamp(next.y, 0, GridManager.Instance.columns - 1);
-            MoveTo(next);
-            remainingSteps--;
+            MoveTo(cell);
+            return;
         }
 
-        if (remainingSteps <= 0)
+        if (velocity.magnitude < stopThreshold)
         {
-            isTravelling = false;
-            velocity = Vector2Int.zero;
+            MoveTo(cell);
         }
-    }
-
-    private bool IsNeighbor(Vector2Int a, Vector2Int b)
-    {
-        int dx = Mathf.Abs(a.x - b.x);
-        int dy = Mathf.Abs(a.y - b.y);
-        return dx <= 1 && dy <= 1 && (dx + dy) > 0;
     }
 
     public bool IsTravelling()

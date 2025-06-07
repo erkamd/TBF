@@ -8,12 +8,14 @@ public class ActionMenu : MonoBehaviour
     private AgentController agent;
     private Coroutine moveCoroutine;
     private bool passMode = false; // Track if we're in pass mode
+    private bool hardPass = false;
 
     public void Open(AgentController selected)
     {
         agent = selected;
         gameObject.SetActive(true);
         passMode = false;
+        hardPass = false;
         UpdateText();
     }
 
@@ -22,16 +24,23 @@ public class ActionMenu : MonoBehaviour
         gameObject.SetActive(false);
         agent = null;
         passMode = false;
+        hardPass = false;
     }
 
     private void UpdateText()
     {
         if (agent == null) return;
+
+        if (passMode)
+        {
+            menuText.text = $"AP: {agent.actionPoints}\nRight-click a cell to pass.";
+            return;
+        }
+
         menuText.text = $"AP: {agent.actionPoints}\n" +
-                        (passMode ? "Right-click a cell to pass.\n"
-                                  : "Click a cell to move.\n" +
-                                    (agent.hasBall ? "1) Pass\n" : "")) +
-                        "2) End Agent";
+                        "Click a cell to move.\n" +
+                        (agent.hasBall ? "1) Soft Pass\n2) Hard Pass\n" : "") +
+                        "3) Wait\n4) End Agent";
     }
 
     public void MoveOrder(Vector2Int targetCell)
@@ -53,7 +62,8 @@ public class ActionMenu : MonoBehaviour
             agent.hasBall = false;
             if (Ball.Instance != null)
             {
-                Ball.Instance.PassTo(targetCell);
+                Ball.Instance.PassTo(targetCell, hardPass);
+                Ball.Instance.AdvanceWithVelocity();
             }
             Debug.Log($"Passed ball to {targetCell}");
             if (agent.actionPoints == 0)
@@ -68,6 +78,20 @@ public class ActionMenu : MonoBehaviour
     }
 
     public bool IsPassMode() => passMode;
+
+    private void WaitOneAP()
+    {
+        if (agent.SpendActionPoints(1))
+        {
+            Ball.Instance.AdvanceWithVelocity();
+            UpdateText();
+
+            if (agent.actionPoints == 0)
+            {
+                GameManager.Instance.EndAgentTurn();
+            }
+        }
+    }
 
     private IEnumerator MoveAgentStepByStep(Vector2Int targetCell)
     {
@@ -84,6 +108,7 @@ public class ActionMenu : MonoBehaviour
             if (agent.SpendActionPoints(1))
             {
                 agent.MoveTo(nextStep);
+                Ball.Instance.AdvanceWithVelocity();
                 UpdateText();
             }
             else
@@ -125,14 +150,31 @@ public class ActionMenu : MonoBehaviour
             if (agent.hasBall)
             {
                 passMode = true;
+                hardPass = false;
                 UpdateText();
             }
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
+            if (agent.hasBall)
+            {
+                passMode = true;
+                hardPass = true;
+                UpdateText();
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            WaitOneAP();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
             agent.actionPoints = 0;
             passMode = false;
+            hardPass = false;
             UpdateText();
             GameManager.Instance.EndAgentTurn();
         }

@@ -90,13 +90,6 @@ public class Ball : MonoBehaviour
 
         gridPosition = cell;
 
-        var agent = GameManager.Instance.GetAgentAtCell(cell);
-        if (agent != null)
-        {
-            MoveTo(cell);
-            return;
-        }
-
         if (velocity.magnitude < stopThreshold)
         {
             MoveTo(cell);

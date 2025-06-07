@@ -40,7 +40,27 @@ public class ActionMenu : MonoBehaviour
         menuText.text = $"AP: {agent.actionPoints}\n" +
                         "Click a cell to move.\n" +
                         (agent.hasBall ? "1) Soft Pass\n2) Hard Pass\n" : "") +
+                        (CanControlBall() ? "5) Control Ball\n" : "") +
                         "3) Wait\n4) End Agent";
+    }
+
+    // Returns true if the agent can control the ball
+    private bool CanControlBall()
+    {
+        return Ball.Instance != null &&
+               !agent.hasBall &&
+               agent.gridPosition == Ball.Instance.gridPosition;
+    }
+
+    // Call this to control the ball
+    private void ControlBall()
+    {
+        if (CanControlBall())
+        {
+            agent.hasBall = true;
+            Debug.Log($"Agent {agent.jerseyNumber} now controls the ball.");
+            UpdateText();
+        }
     }
 
     public void MoveOrder(Vector2Int targetCell)
@@ -177,6 +197,11 @@ public class ActionMenu : MonoBehaviour
             hardPass = false;
             UpdateText();
             GameManager.Instance.EndAgentTurn();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha5))
+        {
+            ControlBall();
         }
     }
 }

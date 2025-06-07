@@ -44,10 +44,6 @@ public class AgentController : MonoBehaviour
         {
             Ball.Instance.MoveTo(cell);
         }
-        else if (Ball.Instance.gridPosition == cell)
-        {
-            hasBall = true;
-        }
     }
 
     public void ResetActionPoints()

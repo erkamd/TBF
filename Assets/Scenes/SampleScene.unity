@@ -373,6 +373,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 20
   height: 12
+  goalWidth: 4
   cellSize: 3
   cellPrefab: {fileID: 3478566144075911101, guid: 176d8d31ea7dc7f46801a619f765c7d3, type: 3}
   gridCanvas: {fileID: 1964448273}
@@ -421,6 +422,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   actionMenu: {fileID: 0}
+  immediateMenu: {fileID: 0}
 --- !u!1 &935998965
 GameObject:
   m_ObjectHideFlags: 0

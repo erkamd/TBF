@@ -179,7 +179,6 @@ public class GameManager : MonoBehaviour
             playerController.selected = null;
         }
 
-        ball.AdvanceWithVelocity();
 
         currentAgentIndex++;
         if (currentAgentIndex >= turnOrder.Count)

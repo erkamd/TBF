@@ -371,8 +371,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 564b6cbbd743410488d7c5f9b8f0564a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rows: 20
-  columns: 12
+  width: 20
+  height: 12
   cellSize: 3
   cellPrefab: {fileID: 3478566144075911101, guid: 176d8d31ea7dc7f46801a619f765c7d3, type: 3}
   gridCanvas: {fileID: 1964448273}

@@ -17,6 +17,11 @@ public class GameManager : MonoBehaviour
     public bool IsPlayerTurn => currentTeam == 0;
     public List<AgentController> PlayerAgents => teamA;
 
+    public PlayerController playerController;
+
+    [Header("Team Spawn Settings")]
+    public int agentGap = 1; // Set this in the Inspector
+
     private void Awake()
     {
         Instance = this;
@@ -33,7 +38,7 @@ public class GameManager : MonoBehaviour
             ballPrefab = Resources.Load<GameObject>("Prefabs/Ball");
         }
 
-        SpawnTeams();
+        SpawnTeams(agentGap);
         SpawnBall();
 
         // Place camera at the geometric center of the pitch using the four corners
@@ -57,19 +62,28 @@ public class GameManager : MonoBehaviour
         SetupUI();
     }
 
-    private void SpawnTeams()
+    private void SpawnTeams(int gap)
     {
+        int numAgents = 3;
         int centerColumn = GridManager.Instance.columns / 2;
-        for (int i = 0; i < 3; i++)
+
+        // For odd numAgents, this will center them; for even, it will be just left of center
+        int startOffset = -((numAgents - 1) / 2) * gap;
+
+        for (int i = 0; i < numAgents; i++)
         {
+            int col = centerColumn + startOffset + i * gap;
+
             var a = Instantiate(agentPrefab);
             var ac = a.GetComponent<AgentController>();
-            ac.Initialize(new Vector2Int(3, centerColumn - 1 + i));
+            ac.agentColor = Color.blue; // Set color for team A
+            ac.Initialize(new Vector2Int(3, col));
             teamA.Add(ac);
 
             var b = Instantiate(agentPrefab);
             var bc = b.GetComponent<AgentController>();
-            bc.Initialize(new Vector2Int(GridManager.Instance.rows - 4, centerColumn - 1 + i));
+            bc.agentColor = Color.red; // Set color for team B
+            bc.Initialize(new Vector2Int(GridManager.Instance.rows - 4, col));
             teamB.Add(bc);
         }
 
@@ -121,12 +135,22 @@ public class GameManager : MonoBehaviour
         var menu = canvasObj.AddComponent<ActionMenu>();
         menu.menuText = text;
 
-        var pc = gameObject.AddComponent<PlayerController>();
-        pc.actionMenu = menu;
+        playerController.actionMenu = menu;
     }
 
     public void EndTeamTurn()
     {
         StartTeamTurn(1 - currentTeam);
+    }
+
+    public void OnGridCellClicked(Vector2Int clickedPosition)
+    {
+        if (playerController.selected)
+        {
+            if (playerController.actionMenu.IsPassMode())
+                playerController.actionMenu.PassOrder(clickedPosition);
+            else
+                playerController.actionMenu.MoveOrder(clickedPosition);
+        }
     }
 }

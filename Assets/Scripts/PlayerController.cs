@@ -4,14 +4,16 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public ActionMenu actionMenu;
-    private AgentController selected;
+
+    [System.NonSerialized]
+    public AgentController selected;
 
     private void Update()
     {
         if (!GameManager.Instance.IsPlayerTurn)
             return;
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonUp(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out var hit))

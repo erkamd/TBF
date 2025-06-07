@@ -6,6 +6,7 @@ public class AgentController : MonoBehaviour
     public Vector2Int gridPosition;
     public bool hasBall;
     public int actionPoints;
+    public Color agentColor = Color.white; // Default to white
 
     private void Start()
     {
@@ -13,14 +14,12 @@ public class AgentController : MonoBehaviour
         {
             var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.SetParent(transform, false);
-
-            // Set the cube's color to white
-            var renderer = cube.GetComponent<MeshRenderer>();
-            if (renderer != null)
-            {
-                renderer.material.color = Color.white;
-            }
         }
+        // Assign color to material
+        MeshRenderer meshRenderer = GetComponentInChildren<MeshRenderer>();
+        if (meshRenderer != null)
+            meshRenderer.material.color = agentColor;
+
         ResetActionPoints();
     }
 

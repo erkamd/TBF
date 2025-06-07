@@ -65,6 +65,7 @@ public class ImmediateActionMenu : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             agent.hasBall = true;
+
             CloseAndResume();
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))

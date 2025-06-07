@@ -235,7 +235,7 @@ public class GameManager : MonoBehaviour
         savedSelection = null;
         savedMenuVisible = false;
     }
-
+    
     public void GoalScored(int side)
     {
         Debug.Log($"Goal scored on {(side < 0 ? "left" : "right")} side!");

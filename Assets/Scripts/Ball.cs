@@ -43,25 +43,8 @@ public class Ball : MonoBehaviour
         gridPosition = cell;
         transform.position = GridManager.Instance.CellToWorld(cell);
 
-        var agent = GameManager.Instance.GetAgentAtCell(cell);
-        if (agent != null)
-        {
-            foreach (var a in GameManager.Instance.AllAgents)
-                a.hasBall = false;
-
-            if (cameFromTravel)
-                GameManager.Instance.TriggerImmediateAction(agent);
-            else
-                agent.hasBall = true;
-
-            isTravelling = false;
-            velocity = Vector2.zero;
-        }
-        else
-        {
-            isTravelling = false;
-            velocity = Vector2.zero;
-        }
+        isTravelling = false;
+        velocity = Vector2.zero;
     }
 
     // Call this to start a pass
@@ -97,6 +80,19 @@ public class Ball : MonoBehaviour
             Mathf.RoundToInt(transform.position.y / GridManager.Instance.cellSize));
         gridPosition = cell;
 
+        // Check for agent collision during travel
+        var agent = GameManager.Instance.GetAgentAtCell(cell);
+        if (agent != null)
+        {
+            foreach (var a in GameManager.Instance.AllAgents)
+                a.hasBall = false;
+
+            isTravelling = false;
+            velocity = Vector2.zero;
+            GameManager.Instance.TriggerImmediateAction(agent);
+            return;
+        }
+
         int side;
         if (GridManager.Instance.IsGoalCell(cell, out side))
         {
@@ -106,7 +102,7 @@ public class Ball : MonoBehaviour
             MoveTo(cell);
             return;
         }
-
+        
         bool bounceX = false;
         bool bounceY = false;
 

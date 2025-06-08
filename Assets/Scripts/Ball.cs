@@ -72,34 +72,54 @@ public class Ball : MonoBehaviour
         if (!isTravelling)
             return;
 
+        // Store previous grid cell
+        Vector2Int prevCell = gridPosition;
+
+        // Move the ball
         transform.position += (Vector3)velocity;
         velocity *= friction;
 
-        Vector2Int cell = new Vector2Int(
+        // Calculate new grid cell
+        Vector2Int newCell = new Vector2Int(
             Mathf.RoundToInt(transform.position.x / GridManager.Instance.cellSize),
             Mathf.RoundToInt(transform.position.y / GridManager.Instance.cellSize));
-        gridPosition = cell;
 
-        // Check for agent collision during travel
-        var agent = GameManager.Instance.GetAgentAtCell(cell);
-        if (agent != null)
+        // Check all cells between prevCell and newCell, but skip the starting cell
+        bool first = true;
+        foreach (var cell in GetCellsOnLine(prevCell, newCell))
         {
-            foreach (var a in GameManager.Instance.AllAgents)
-                a.hasBall = false;
+            if (first)
+            {
+                first = false;
+                continue; // Skip the starting cell
+            }
 
-            isTravelling = false;
-            velocity = Vector2.zero;
-            GameManager.Instance.TriggerImmediateAction(agent);
-            return;
+            gridPosition = cell;
+
+            // Check for agent collision during travel
+            var agent = GameManager.Instance.GetAgentAtCell(cell);
+            if (agent != null)
+            {
+                foreach (var a in GameManager.Instance.AllAgents)
+                    a.hasBall = false;
+
+                isTravelling = false;
+                velocity = Vector2.zero;
+                transform.position = GridManager.Instance.CellToWorld(cell);
+                GameManager.Instance.TriggerImmediateAction(agent);
+                return;
+            }
         }
 
+        gridPosition = newCell;
+
         int side;
-        if (GridManager.Instance.IsGoalCell(cell, out side))
+        if (GridManager.Instance.IsGoalCell(newCell, out side))
         {
             isTravelling = false;
             velocity = Vector2.zero;
             GameManager.Instance.GoalScored(side);
-            MoveTo(cell);
+            MoveTo(newCell);
             return;
         }
 
@@ -107,38 +127,38 @@ public class Ball : MonoBehaviour
         bool bounceY = false;
 
         // X axis bounce, but check for goal cells at left/right
-        if (cell.x < 0)
+        if (newCell.x < 0)
         {
-            if (!GridManager.Instance.IsGoalCell(new Vector2Int(-1, cell.y), out _))
+            if (!GridManager.Instance.IsGoalCell(new Vector2Int(-1, newCell.y), out _))
             {
                 bounceX = true;
-                cell.x = 0;
+                newCell.x = 0;
             }
         }
-        else if (cell.x >= GridManager.Instance.width)
+        else if (newCell.x >= GridManager.Instance.width)
         {
-            if (!GridManager.Instance.IsGoalCell(new Vector2Int(GridManager.Instance.width, cell.y), out _))
+            if (!GridManager.Instance.IsGoalCell(new Vector2Int(GridManager.Instance.width, newCell.y), out _))
             {
                 bounceX = true;
-                cell.x = GridManager.Instance.width - 1;
+                newCell.x = GridManager.Instance.width - 1;
             }
         }
 
         // Y axis bounce, but check for goal cells at top/bottom
-        if (cell.y < 0)
+        if (newCell.y < 0)
         {
-            if (!GridManager.Instance.IsGoalCell(new Vector2Int(cell.x, -1), out _))
+            if (!GridManager.Instance.IsGoalCell(new Vector2Int(newCell.x, -1), out _))
             {
                 bounceY = true;
-                cell.y = 0;
+                newCell.y = 0;
             }
         }
-        else if (cell.y >= GridManager.Instance.height)
+        else if (newCell.y >= GridManager.Instance.height)
         {
-            if (!GridManager.Instance.IsGoalCell(new Vector2Int(cell.x, GridManager.Instance.height), out _))
+            if (!GridManager.Instance.IsGoalCell(new Vector2Int(newCell.x, GridManager.Instance.height), out _))
             {
                 bounceY = true;
-                cell.y = GridManager.Instance.height - 1;
+                newCell.y = GridManager.Instance.height - 1;
             }
         }
 
@@ -147,13 +167,33 @@ public class Ball : MonoBehaviour
 
         if (bounceX || bounceY)
         {
-            transform.position = GridManager.Instance.CellToWorld(cell);
-            gridPosition = cell;
+            transform.position = GridManager.Instance.CellToWorld(newCell);
+            gridPosition = newCell;
         }
 
         if (velocity.magnitude < stopThreshold)
         {
-            MoveTo(cell);
+            MoveTo(newCell);
+        }
+    }
+
+    // Bresenham's line algorithm for grid traversal
+    private static System.Collections.Generic.IEnumerable<Vector2Int> GetCellsOnLine(Vector2Int from, Vector2Int to)
+    {
+        int x0 = from.x, y0 = from.y;
+        int x1 = to.x, y1 = to.y;
+        int dx = Mathf.Abs(x1 - x0), dy = Mathf.Abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+
+        while (true)
+        {
+            yield return new Vector2Int(x0, y0);
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
         }
     }
 

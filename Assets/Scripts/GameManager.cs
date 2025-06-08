@@ -30,6 +30,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Team Spawn Settings")]
     public int agentGap = 1; // Set this in the Inspector
+    private readonly List<AgentController> goalkeepers = new();
 
     private void Awake()
     {
@@ -126,6 +127,9 @@ public class GameManager : MonoBehaviour
         teamB.Add(gkb);
         allAgents.Add(gkb);
 
+        goalkeepers.Add(gka);
+        goalkeepers.Add(gkb);
+
         teamA[0].hasBall = true;
     }
 
@@ -148,7 +152,7 @@ public class GameManager : MonoBehaviour
         copy.RemoveAll(a => a.isGoalkeeper);
         while (copy.Count > 0)
         {
-            int index = Random.Range(0, copy.Count);
+            int index = 0; // Random.Range(0, copy.Count);
             turnOrder.Add(copy[index]);
             copy.RemoveAt(index);
         }
@@ -316,6 +320,15 @@ public class GameManager : MonoBehaviour
                 playerController.actionMenu.PassOrder(clickedPosition);
             else
                 playerController.actionMenu.MoveOrder(clickedPosition);
+        }
+    }
+    public void NotifyGoalkeepersOnActionPointSpent()
+    {
+        foreach (var gk in goalkeepers)
+        {
+            var ai = gk.GetComponent<GoalkeeperAI>();
+            if (ai != null)
+                ai.OnActionPointSpent();
         }
     }
 }

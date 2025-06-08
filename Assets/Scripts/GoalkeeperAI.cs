@@ -8,6 +8,7 @@ public class GoalkeeperAI : MonoBehaviour
     private int minY;
     private int maxY;
     private int keeperX;
+    private bool canMove = false;
 
     private void Start()
     {
@@ -17,14 +18,6 @@ public class GoalkeeperAI : MonoBehaviour
         keeperX = side == -1 ? 0 : gm.width - 1;
         minY = Mathf.Max(0, gm.GoalStartY - 1);
         maxY = Mathf.Min(gm.height - 1, gm.GoalEndY + 1);
-    }
-
-    private void Update()
-    {
-        if (agent.actionPoints <= 0) return;
-
-        Vector2Int target = DetermineTarget();
-        MoveTowards(target);
     }
 
     private Vector2Int DetermineTarget()
@@ -47,7 +40,7 @@ public class GoalkeeperAI : MonoBehaviour
             int y = Mathf.Clamp(Mathf.RoundToInt(py), minY, maxY);
             return new Vector2Int(keeperX, y);
         }
-        else if (ball.IsTravelling() && Mathf.Sign(ball.Velocity.x) == -side)
+        else if (ball.IsTravelling() && Mathf.Sign(ball.Velocity.x) == side)
         {
             Vector2 posW = ball.transform.position;
             Vector2 vel = ball.Velocity;
@@ -77,6 +70,33 @@ public class GoalkeeperAI : MonoBehaviour
             {
                 agent.MoveTo(next);
             }
+        }
+    }
+
+    public void OnActionPointSpent()
+    {
+        canMove = true;
+        TryMove();
+    }
+
+    private void TryMove()
+    {
+        if (!canMove) return;
+
+        Vector2Int target = DetermineTarget();
+        if (agent.gridPosition == target)
+            return;
+
+        Vector2Int next = agent.gridPosition;
+        if (target.y > agent.gridPosition.y) next.y += 1;
+        else if (target.y < agent.gridPosition.y) next.y -= 1;
+        next.x = keeperX;
+        next.y = Mathf.Clamp(next.y, minY, maxY);
+
+        if (!GameManager.Instance.IsCellOccupied(next))
+        {
+            agent.MoveTo(next);
+            canMove = false; // Only move once per AP spent
         }
     }
 }

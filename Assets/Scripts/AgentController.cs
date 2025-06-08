@@ -81,6 +81,7 @@ public class AgentController : MonoBehaviour
         if (actionPoints < amount)
             return false;
         actionPoints -= amount;
+        GameManager.Instance.NotifyGoalkeepersOnActionPointSpent();
         return true;
     }
 }

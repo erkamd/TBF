@@ -79,16 +79,17 @@ public class ActionMenu : MonoBehaviour
         // Only allow passing if agent has the ball and enough AP
         if (agent.hasBall && agent.SpendActionPoints(1))
         {
-            agent.hasBall = false;
-            if (Ball.Instance != null)
-            {
-                Ball.Instance.PassTo(targetCell, hardPass);
-                Ball.Instance.AdvanceWithVelocity();
-            }
             Debug.Log($"Passed ball to {targetCell}");
             if (agent.actionPoints == 0)
             {
                 GameManager.Instance.EndAgentTurn();
+            }
+            agent.hasBall = false;
+
+            if (Ball.Instance != null)
+            {
+                Ball.Instance.PassTo(targetCell, hardPass);
+                Ball.Instance.AdvanceWithVelocity();
             }
         }
         else

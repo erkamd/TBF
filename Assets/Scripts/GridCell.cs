@@ -13,11 +13,11 @@ public class GridCell : MonoBehaviour, IPointerClickHandler
         {
             ClickCallBack();
         }
-        else if (eventData.button == PointerEventData.InputButton.Left)
-        {
-            GameManager.Instance.playerController.actionMenu.Close();
-            GameManager.Instance.playerController.selected = null;
-        }
+        //else if (eventData.button == PointerEventData.InputButton.Left)
+        //{
+        //    GameManager.Instance.playerController.actionMenu.Close();
+        //    GameManager.Instance.playerController.selected = null;
+        //}
     }
 
     public void ClickCallBack()

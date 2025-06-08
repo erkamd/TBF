@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -35,7 +36,7 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
 
-    private void Start()
+    private IEnumerator Start()
     {
         if (agentPrefab == null)
         {
@@ -65,6 +66,8 @@ public class GameManager : MonoBehaviour
             camera.transform.position = new Vector3(centerWorld.x, centerWorld.y, centerWorld.z - 10f); // Adjust height and distance as needed
             //camera.transform.LookAt(new Vector3(centerWorld.x, 0f, centerWorld.z));
         }
+
+        yield return null;
 
         SetupUI();
         StartCycle();
@@ -135,15 +138,35 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentAgent == null)
             return;
+
+        // Auto-select the agent that has the turn
+        if (playerController != null)
+        {
+            playerController.SelectAgent(CurrentAgent);
+        }
     }
 
     private void UpdateTurnOrderDisplay()
     {
         if (orderText == null) return;
         var nums = new List<string>();
+
+        // Determine if immediate action is open and for which agent
+        bool immediateActionActive = playerController.immediateMenu != null && playerController.immediateMenu.IsOpen();
+        AgentController immediateAgent = immediateActionActive ? playerController.immediateMenu.agent : null;
+
         for (int i = 0; i < turnOrder.Count; i++)
         {
-            var color = (i == currentAgentIndex) ? "#FFFF00" : "#FFFFFF"; // Yellow for current, white for others
+            string color = "#FFFFFF"; // Default: white
+
+            if (immediateActionActive && turnOrder[i] == immediateAgent)
+                color = "#FF0000"; // Red if immediate action for this agent
+
+            if (i == currentAgentIndex)
+            {
+                color = "#FFFF00"; // Yellow for current agent
+            }
+
             nums.Add($"<color={color}>{turnOrder[i].jerseyNumber}</color>");
         }
         orderText.text = "Order: " + string.Join(" ", nums);
@@ -168,7 +191,7 @@ public class GameManager : MonoBehaviour
         rt.pivot = new Vector2(0, 1);
         rt.anchoredPosition = new Vector2(10, -30);
 
-        var menu = canvasObj.AddComponent<ActionMenu>();
+        var menu = textObj.AddComponent<ActionMenu>();
         menu.menuText = text;
 
         playerController.actionMenu = menu;
@@ -182,9 +205,9 @@ public class GameManager : MonoBehaviour
         rt2.anchorMin = new Vector2(0, 1);
         rt2.anchorMax = new Vector2(0, 1);
         rt2.pivot = new Vector2(0, 1);
-        rt2.anchoredPosition = new Vector2(10, -120);
+        rt2.anchoredPosition = new Vector2(10, -30);
 
-        var immMenu = canvasObj.AddComponent<ImmediateActionMenu>();
+        var immMenu = immObj.AddComponent<ImmediateActionMenu>();
         immMenu.menuText = immText;
         immMenu.Close();
 
@@ -195,10 +218,8 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentAgent != null)
         {
-            playerController.actionMenu.Close();
-            playerController.selected = null;
+            playerController.ResetSelection();
         }
-
 
         currentAgentIndex++;
         if (currentAgentIndex >= turnOrder.Count)
@@ -220,6 +241,7 @@ public class GameManager : MonoBehaviour
         playerController.actionMenu.Close();
         playerController.selectionLocked = true;
         playerController.immediateMenu.Open(agent);
+        UpdateTurnOrderDisplay();
     }
 
     public void FinishImmediateAction()

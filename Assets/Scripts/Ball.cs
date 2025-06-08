@@ -102,21 +102,29 @@ public class Ball : MonoBehaviour
             MoveTo(cell);
             return;
         }
-        
+
         bool bounceX = false;
         bool bounceY = false;
 
+        // X axis bounce, but check for goal cells at left/right
         if (cell.x < 0)
         {
-            bounceX = true;
-            cell.x = 0;
+            if (!GridManager.Instance.IsGoalCell(new Vector2Int(-1, cell.y), out _))
+            {
+                bounceX = true;
+                cell.x = 0;
+            }
         }
         else if (cell.x >= GridManager.Instance.width)
         {
-            bounceX = true;
-            cell.x = GridManager.Instance.width - 1;
+            if (!GridManager.Instance.IsGoalCell(new Vector2Int(GridManager.Instance.width, cell.y), out _))
+            {
+                bounceX = true;
+                cell.x = GridManager.Instance.width - 1;
+            }
         }
 
+        // Y axis bounce, but check for goal cells at top/bottom
         if (cell.y < 0)
         {
             if (!GridManager.Instance.IsGoalCell(new Vector2Int(cell.x, -1), out _))

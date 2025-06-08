@@ -31,12 +31,25 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void SelectAgent(AgentController agent)
+    public void SelectAgent(AgentController agent)
     {
         if (agent.actionPoints <= 0)
             return;
 
+        if (selected != null)
+        {
+            selected.SetSelected(false);
+        }
+
         selected = agent;
+        selected.SetSelected(true);
         actionMenu.Open(agent);
+    }
+
+    public void ResetSelection()
+    {
+        actionMenu.Close();
+        selected.SetSelected(false);
+        selected = null;
     }
 }

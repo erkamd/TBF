@@ -4,8 +4,11 @@ using UnityEngine.UI;
 public class ImmediateActionMenu : MonoBehaviour
 {
     public Text menuText;
-    private AgentController agent;
+    public AgentController agent { get; private set; }
     private bool passMode = false;
+
+    public bool IsPassMode() => passMode;
+    public bool IsOpen() => gameObject.activeSelf;
 
     public void Open(AgentController a)
     {
@@ -43,9 +46,6 @@ public class ImmediateActionMenu : MonoBehaviour
                         "2) One-Touch Pass\n" +
                         "3) Do Nothing";
     }
-
-    public bool IsPassMode() => passMode;
-    public bool IsOpen() => gameObject.activeSelf;
 
     public void PassOrder(Vector2Int cell)
     {

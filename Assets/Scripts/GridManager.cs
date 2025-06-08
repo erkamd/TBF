@@ -116,14 +116,14 @@ public class GridManager : MonoBehaviour
     public bool IsGoalCell(Vector2Int cell, out int side)
     {
         side = 0;
-        if (cell.x >= GoalStartY && cell.x <= GoalEndY)
+        if (cell.y >= GoalStartY && cell.y <= GoalEndY)
         {
-            if (cell.y == -1)
+            if (cell.x == -1)
             {
                 side = -1;
                 return true;
             }
-            if (cell.y == height)
+            if (cell.x == width)
             {
                 side = 1;
                 return true;

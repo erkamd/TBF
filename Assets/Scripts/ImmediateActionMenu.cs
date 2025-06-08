@@ -14,7 +14,7 @@ public class ImmediateActionMenu : MonoBehaviour
     {
         agent = a;
         gameObject.SetActive(true);
-        passMode = false;
+        passMode = agent.isGoalkeeper; // GK goes directly to pass mode
         UpdateText();
     }
 
@@ -41,10 +41,18 @@ public class ImmediateActionMenu : MonoBehaviour
             return;
         }
 
-        menuText.text = "Immediate Action:\n" +
-                        "1) Control Ball\n" +
-                        "2) One-Touch Pass\n" +
-                        "3) Do Nothing";
+        if (agent.isGoalkeeper)
+        {
+            menuText.text = "Click a cell for one-touch pass.";
+            passMode = true;
+        }
+        else
+        {
+            menuText.text = "Immediate Action:\n" +
+                            "1) Control Ball\n" +
+                            "2) One-Touch Pass\n" +
+                            "3) Do Nothing";
+        }
     }
 
     public void PassOrder(Vector2Int cell)
@@ -60,7 +68,7 @@ public class ImmediateActionMenu : MonoBehaviour
     {
         if (!gameObject.activeSelf || agent == null) return;
 
-        if (passMode) return;
+        if (agent.isGoalkeeper || passMode) return;
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {

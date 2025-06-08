@@ -104,6 +104,28 @@ public class GameManager : MonoBehaviour
             allAgents.Add(bc);
         }
 
+        int gkY = (GridManager.Instance.GoalStartY + GridManager.Instance.GoalEndY) / 2;
+
+        var gkaObj = Instantiate(agentPrefab);
+        var gka = gkaObj.GetComponent<AgentController>();
+        gka.agentColor = Color.blue;
+        gka.jerseyNumber = jersey++;
+        gka.isGoalkeeper = true;
+        gka.Initialize(new Vector2Int(0, gkY));
+        gkaObj.AddComponent<GoalkeeperAI>();
+        teamA.Add(gka);
+        allAgents.Add(gka);
+
+        var gkbObj = Instantiate(agentPrefab);
+        var gkb = gkbObj.GetComponent<AgentController>();
+        gkb.agentColor = Color.red;
+        gkb.jerseyNumber = jersey++;
+        gkb.isGoalkeeper = true;
+        gkb.Initialize(new Vector2Int(GridManager.Instance.width - 1, gkY));
+        gkbObj.AddComponent<GoalkeeperAI>();
+        teamB.Add(gkb);
+        allAgents.Add(gkb);
+
         teamA[0].hasBall = true;
     }
 
@@ -123,6 +145,7 @@ public class GameManager : MonoBehaviour
 
         turnOrder.Clear();
         var copy = new List<AgentController>(allAgents);
+        copy.RemoveAll(a => a.isGoalkeeper);
         while (copy.Count > 0)
         {
             int index = Random.Range(0, copy.Count);

@@ -6,6 +6,7 @@ public class AgentController : MonoBehaviour
     public AgentStats stats = new AgentStats();
     public Vector2Int gridPosition;
     public bool hasBall;
+    public bool isGoalkeeper = false;
     public int actionPoints;
     public int jerseyNumber;
     public Color agentColor = Color.white; // Default to white

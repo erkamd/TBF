@@ -12,8 +12,8 @@ public class GridManager : MonoBehaviour
     public GameObject gridCanvas; // Assign this in the Inspector
 
 
-    private int GoalStartY => Mathf.Max(0, (height - goalWidth) / 2);
-    private int GoalEndY => Mathf.Min(height - 1, GoalStartY + goalWidth - 1);
+    public int GoalStartY => Mathf.Max(0, (height - goalWidth) / 2);
+    public int GoalEndY => Mathf.Min(height - 1, GoalStartY + goalWidth - 1);
 
     private void Awake()
     {

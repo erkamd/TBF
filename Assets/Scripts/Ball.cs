@@ -161,4 +161,6 @@ public class Ball : MonoBehaviour
     {
         return isTravelling;
     }
+
+    public Vector2 Velocity => velocity;
 }

@@ -371,9 +371,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 564b6cbbd743410488d7c5f9b8f0564a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 30
-  height: 18
-  goalWidth: 4
+  width: 20
+  height: 13
+  goalWidth: 5
   cellSize: 3
   cellPrefab: {fileID: 3478566144075911101, guid: 176d8d31ea7dc7f46801a619f765c7d3, type: 3}
   gridCanvas: {fileID: 1964448273}
@@ -395,10 +395,10 @@ MonoBehaviour:
   playerController: {fileID: 813005568}
   orderText: {fileID: 935998967}
   leftTeamPositions:
+  - {x: 3, y: 6}
+  - {x: 5, y: 3}
   - {x: 5, y: 9}
-  - {x: 8, y: 3}
-  - {x: 8, y: 12}
-  - {x: 12, y: 9}
+  - {x: 8, y: 6}
   leftGoalkeeperPosition: {x: 0, y: 0}
 --- !u!4 &813005567
 Transform:
@@ -463,7 +463,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 44.7, y: -446}
+  m_AnchoredPosition: {x: 29.5, y: -460.7}
   m_SizeDelta: {x: 50, y: 5.0524}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &935998967

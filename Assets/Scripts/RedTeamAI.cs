@@ -76,6 +76,26 @@ public class RedTeamAI : MonoBehaviour
         GameManager.Instance.EndAgentTurn();
     }
 
+    public IEnumerator HandleImmediateAction(AgentController agent)
+    {
+        // small delay to mimic thinking time
+        yield return new WaitForSeconds(0.2f);
+
+        if (TryShoot(agent))
+        {
+            Ball.Instance.AdvanceWithVelocity();
+            yield break;
+        }
+
+        if (TryPassForward(agent))
+        {
+            Ball.Instance.AdvanceWithVelocity();
+            yield break;
+        }
+
+        agent.hasBall = true;
+    }
+
     private Vector2Int StepTowards(Vector2Int from, Vector2Int to)
     {
         Vector2Int step = from;

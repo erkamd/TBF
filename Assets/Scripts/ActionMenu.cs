@@ -73,6 +73,7 @@ public class ActionMenu : MonoBehaviour
 
     public void PassOrder(Vector2Int targetCell)
     {
+        if (agent == null) return;
         passMode = false;
         UpdateText();
 

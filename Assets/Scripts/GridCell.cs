@@ -22,10 +22,7 @@ public class GridCell : MonoBehaviour, IPointerClickHandler
 
     public void ClickCallBack()
     {
-        if (GameManager.Instance.GetComponent<PlayerController>().selected)
-        {
-            Debug.Log("clicked: " + gridPosition);
-            GameManager.Instance.OnGridCellClicked(gridPosition);
-        }
+        Debug.Log("clicked: " + gridPosition);
+        GameManager.Instance.OnGridCellClicked(gridPosition);
     }
 }

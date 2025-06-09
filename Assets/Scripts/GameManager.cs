@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour
 
     private AgentController savedSelection;
     private bool savedMenuVisible;
+    private AgentController pendingTurnAgent;
 
     public static GameManager Instance { get; private set; }
 
@@ -193,8 +194,16 @@ public class GameManager : MonoBehaviour
         }
         else if (playerController != null)
         {
-            // Auto-select the agent that has the turn for the player
-            playerController.SelectAgent(CurrentAgent);
+            // If an immediate action is happening, delay opening the menu
+            if (playerController.immediateMenu != null && playerController.immediateMenu.IsOpen())
+            {
+                pendingTurnAgent = CurrentAgent;
+            }
+            else
+            {
+                // Auto-select the agent that has the turn for the player
+                playerController.SelectAgent(CurrentAgent);
+            }
         }
     }
 
@@ -307,7 +316,14 @@ public class GameManager : MonoBehaviour
         playerController.immediateMenu.Close();
         playerController.selectionLocked = false;
 
-        if (savedMenuVisible && savedSelection != null)
+        if (pendingTurnAgent != null)
+        {
+            playerController.actionMenu.Close();
+            playerController.SelectAgent(pendingTurnAgent);
+            pendingTurnAgent = null;
+            UpdateTurnOrderDisplay();
+        }
+        else if (savedMenuVisible && savedSelection != null)
         {
             playerController.selected = savedSelection;
             playerController.actionMenu.Open(savedSelection);

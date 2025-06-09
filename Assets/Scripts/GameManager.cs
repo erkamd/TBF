@@ -16,6 +16,11 @@ public class GameManager : MonoBehaviour
     private int currentAgentIndex = 0;
     private Ball ball;
 
+    [Header("AI Settings")]
+    public bool enableRedAI = true;
+    private RedTeamAI aiController;
+    private Coroutine aiRoutine;
+
     private AgentController savedSelection;
     private bool savedMenuVisible;
 
@@ -24,17 +29,22 @@ public class GameManager : MonoBehaviour
     public AgentController CurrentAgent => turnOrder.Count > 0 ? turnOrder[currentAgentIndex] : null;
     public List<AgentController> PlayerAgents => teamA;
     public List<AgentController> AllAgents => allAgents;
+    public List<AgentController> AIAgents => teamB;
 
     public PlayerController playerController;
     public TextMeshProUGUI orderText;
 
     [Header("Team Spawn Settings")]
-    public int agentGap = 1; // Set this in the Inspector
+    public List<Vector2Int> leftTeamPositions = new();
+    public Vector2Int leftGoalkeeperPosition = Vector2Int.zero;
     private readonly List<AgentController> goalkeepers = new();
 
     private void Awake()
     {
         Instance = this;
+        aiController = GetComponent<RedTeamAI>();
+        if (aiController == null)
+            aiController = gameObject.AddComponent<RedTeamAI>();
     }
 
     private IEnumerator Start()
@@ -48,7 +58,7 @@ public class GameManager : MonoBehaviour
             ballPrefab = Resources.Load<GameObject>("Prefabs/Ball");
         }
 
-        SpawnTeams(agentGap);
+        SpawnTeams();
         SpawnBall();
 
         // Place camera at the geometric center of the pitch using the four corners
@@ -76,23 +86,28 @@ public class GameManager : MonoBehaviour
         UpdateTurnOrderDisplay();
     }
 
-    private void SpawnTeams(int gap)
+    private void SpawnTeams()
     {
-        int numAgents = 3;
-        int centerColumn = GridManager.Instance.height / 2;
-
-        int startOffset = -((numAgents - 1) / 2) * gap;
-
         int jersey = 1;
-        for (int i = 0; i < numAgents; i++)
+        if (leftTeamPositions.Count == 0)
         {
-            int col = centerColumn + startOffset + i * gap;
+            int numAgents = 3;
+            int centerColumn = GridManager.Instance.height / 2;
+            int startOffset = -((numAgents - 1) / 2);
+            for (int i = 0; i < numAgents; i++)
+            {
+                int col = centerColumn + startOffset + i;
+                leftTeamPositions.Add(new Vector2Int(3, col));
+            }
+        }
 
+        foreach (var pos in leftTeamPositions)
+        {
             var a = Instantiate(agentPrefab);
             var ac = a.GetComponent<AgentController>();
             ac.agentColor = Color.blue;
             ac.jerseyNumber = jersey++;
-            ac.Initialize(new Vector2Int(3, col));
+            ac.Initialize(pos);
             teamA.Add(ac);
             allAgents.Add(ac);
 
@@ -100,29 +115,33 @@ public class GameManager : MonoBehaviour
             var bc = b.GetComponent<AgentController>();
             bc.agentColor = Color.red;
             bc.jerseyNumber = jersey++;
-            bc.Initialize(new Vector2Int(GridManager.Instance.width - 4, col));
+            Vector2Int sym = new Vector2Int(GridManager.Instance.width - 1 - pos.x, pos.y);
+            bc.Initialize(sym);
             teamB.Add(bc);
             allAgents.Add(bc);
         }
 
-        int gkY = (GridManager.Instance.GoalStartY + GridManager.Instance.GoalEndY) / 2;
+        Vector2Int gkA = leftGoalkeeperPosition;
+        if (gkA == Vector2Int.zero)
+            gkA = new Vector2Int(0, (GridManager.Instance.GoalStartY + GridManager.Instance.GoalEndY) / 2);
 
         var gkaObj = Instantiate(agentPrefab);
         var gka = gkaObj.GetComponent<AgentController>();
         gka.agentColor = Color.blue;
         gka.jerseyNumber = jersey++;
         gka.isGoalkeeper = true;
-        gka.Initialize(new Vector2Int(0, gkY));
+        gka.Initialize(gkA);
         gkaObj.AddComponent<GoalkeeperAI>();
         teamA.Add(gka);
         allAgents.Add(gka);
 
+        Vector2Int gkB = new Vector2Int(GridManager.Instance.width - 1 - gkA.x, gkA.y);
         var gkbObj = Instantiate(agentPrefab);
         var gkb = gkbObj.GetComponent<AgentController>();
         gkb.agentColor = Color.red;
         gkb.jerseyNumber = jersey++;
         gkb.isGoalkeeper = true;
-        gkb.Initialize(new Vector2Int(GridManager.Instance.width - 1, gkY));
+        gkb.Initialize(gkB);
         gkbObj.AddComponent<GoalkeeperAI>();
         teamB.Add(gkb);
         allAgents.Add(gkb);
@@ -130,7 +149,8 @@ public class GameManager : MonoBehaviour
         goalkeepers.Add(gka);
         goalkeepers.Add(gkb);
 
-        teamA[0].hasBall = true;
+        if (teamA.Count > 0)
+            teamA[0].hasBall = true;
     }
 
     private void SpawnBall()
@@ -165,10 +185,15 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentAgent == null)
             return;
-
-        // Auto-select the agent that has the turn
-        if (playerController != null)
+        if (enableRedAI && teamB.Contains(CurrentAgent))
         {
+            if (aiRoutine != null)
+                StopCoroutine(aiRoutine);
+            aiRoutine = StartCoroutine(aiController.TakeTurn(CurrentAgent));
+        }
+        else if (playerController != null)
+        {
+            // Auto-select the agent that has the turn for the player
             playerController.SelectAgent(CurrentAgent);
         }
     }
@@ -263,6 +288,12 @@ public class GameManager : MonoBehaviour
 
     public void TriggerImmediateAction(AgentController agent)
     {
+        if (enableRedAI && teamB.Contains(agent))
+        {
+            StartCoroutine(aiController.HandleImmediateAction(agent));
+            return;
+        }
+
         savedSelection = playerController.selected;
         savedMenuVisible = playerController.actionMenu.gameObject.activeSelf;
         playerController.actionMenu.Close();

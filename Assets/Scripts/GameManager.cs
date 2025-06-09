@@ -16,6 +16,11 @@ public class GameManager : MonoBehaviour
     private int currentAgentIndex = 0;
     private Ball ball;
 
+    [Header("AI Settings")]
+    public bool enableRedAI = true;
+    private RedTeamAI aiController;
+    private Coroutine aiRoutine;
+
     private AgentController savedSelection;
     private bool savedMenuVisible;
 
@@ -24,6 +29,7 @@ public class GameManager : MonoBehaviour
     public AgentController CurrentAgent => turnOrder.Count > 0 ? turnOrder[currentAgentIndex] : null;
     public List<AgentController> PlayerAgents => teamA;
     public List<AgentController> AllAgents => allAgents;
+    public List<AgentController> AIAgents => teamB;
 
     public PlayerController playerController;
     public TextMeshProUGUI orderText;
@@ -35,6 +41,9 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        aiController = GetComponent<RedTeamAI>();
+        if (aiController == null)
+            aiController = gameObject.AddComponent<RedTeamAI>();
     }
 
     private IEnumerator Start()
@@ -165,10 +174,15 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentAgent == null)
             return;
-
-        // Auto-select the agent that has the turn
-        if (playerController != null)
+        if (enableRedAI && teamB.Contains(CurrentAgent))
         {
+            if (aiRoutine != null)
+                StopCoroutine(aiRoutine);
+            aiRoutine = StartCoroutine(aiController.TakeTurn(CurrentAgent));
+        }
+        else if (playerController != null)
+        {
+            // Auto-select the agent that has the turn for the player
             playerController.SelectAgent(CurrentAgent);
         }
     }

@@ -41,6 +41,7 @@ public class ActionMenu : MonoBehaviour
                         "Click a cell to move.\n" +
                         (agent.hasBall ? "1) Soft Pass\n2) Hard Pass\n" : "") +
                         (CanControlBall() ? "5) Control Ball\n" : "") +
+                        (CanTackle() ? "6) Tackle\n" : "") +
                         "3) Wait\n4) End Agent";
     }
 
@@ -60,6 +61,66 @@ public class ActionMenu : MonoBehaviour
             agent.hasBall = true;
             Debug.Log($"Agent {agent.jerseyNumber} now controls the ball.");
             UpdateText();
+        }
+    }
+
+    private bool CanTackle()
+    {
+        Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        foreach (var d in dirs)
+        {
+            var other = GameManager.Instance.GetAgentAtCell(agent.gridPosition + d);
+            if (other != null && other != agent && other.hasBall)
+            {
+                // Only allow tackling opponents
+                bool sameTeam = GameManager.Instance.PlayerAgents.Contains(agent) ?
+                                  GameManager.Instance.PlayerAgents.Contains(other) :
+                                  GameManager.Instance.AIAgents.Contains(other);
+                if (!sameTeam)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private void TryTackle()
+    {
+        if (agent.actionPoints <= 0) return;
+
+        Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        foreach (var d in dirs)
+        {
+            var other = GameManager.Instance.GetAgentAtCell(agent.gridPosition + d);
+            if (other != null && other.hasBall)
+            {
+                bool sameTeam = GameManager.Instance.PlayerAgents.Contains(agent) ?
+                                  GameManager.Instance.PlayerAgents.Contains(other) :
+                                  GameManager.Instance.AIAgents.Contains(other);
+                if (sameTeam) continue;
+
+                if (!agent.SpendActionPoints(1))
+                    return;
+
+                int attackRoll = Dice.Roll(20) + agent.stats.defending;
+                int defenseRoll = Dice.Roll(20) + other.stats.ballControl;
+
+                if (attackRoll >= defenseRoll)
+                {
+                    other.hasBall = false;
+                    agent.hasBall = true;
+                    Debug.Log($"Tackle success by {agent.jerseyNumber} on {other.jerseyNumber}");
+                }
+                else
+                {
+                    Debug.Log($"Tackle failed by {agent.jerseyNumber} on {other.jerseyNumber}");
+                }
+
+                if (agent.actionPoints == 0)
+                    GameManager.Instance.EndAgentTurn();
+
+                UpdateText();
+                return;
+            }
         }
     }
 
@@ -204,6 +265,11 @@ public class ActionMenu : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha5))
         {
             ControlBall();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha6))
+        {
+            TryTackle();
         }
     }
 }

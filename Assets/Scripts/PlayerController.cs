@@ -48,8 +48,12 @@ public class PlayerController : MonoBehaviour
 
     public void ResetSelection()
     {
-        actionMenu.Close();
-        selected.SetSelected(false);
-        selected = null;
+        if (actionMenu != null)
+            actionMenu.Close();
+        if (selected != null)
+        {
+            selected.SetSelected(false);
+            selected = null;
+        }
     }
 }

@@ -391,9 +391,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   agentPrefab: {fileID: 100000, guid: 9bb71ca74a2d4d55a9d789e318a82b08, type: 3}
   ballPrefab: {fileID: 100000, guid: f55f7d3ee9fa4d268f3c765e336e6c08, type: 3}
+  enableRedAI: 1
   playerController: {fileID: 813005568}
   orderText: {fileID: 935998967}
-  agentGap: 3
+  leftTeamPositions:
+  - {x: 5, y: 9}
+  - {x: 8, y: 3}
+  - {x: 8, y: 12}
+  - {x: 12, y: 9}
+  leftGoalkeeperPosition: {x: 0, y: 0}
 --- !u!4 &813005567
 Transform:
   m_ObjectHideFlags: 0

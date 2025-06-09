@@ -98,12 +98,7 @@ public class RedTeamAI : MonoBehaviour
 
     private Vector2Int StepTowards(Vector2Int from, Vector2Int to)
     {
-        Vector2Int step = from;
-        if (from.x != to.x)
-            step.x += from.x < to.x ? 1 : -1;
-        else if (from.y != to.y)
-            step.y += from.y < to.y ? 1 : -1;
-        return step;
+        return Pathfinding.NextStep(from, to);
     }
 
     private bool TryShoot(AgentController agent)

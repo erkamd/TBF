@@ -109,10 +109,12 @@ public class ActionMenu : MonoBehaviour
                     other.hasBall = false;
                     agent.hasBall = true;
                     Debug.Log($"Tackle success by {agent.jerseyNumber} on {other.jerseyNumber}");
+                    FloatingText.Create("Tackle Success", GridManager.Instance.CellToWorld(other.gridPosition));
                 }
                 else
                 {
                     Debug.Log($"Tackle failed by {agent.jerseyNumber} on {other.jerseyNumber}");
+                    FloatingText.Create("Tackle Fail", GridManager.Instance.CellToWorld(agent.gridPosition));
                 }
 
                 if (agent.actionPoints == 0)
@@ -180,7 +182,7 @@ public class ActionMenu : MonoBehaviour
     {
         while (agent.actionPoints > 0 && agent.gridPosition != targetCell)
         {
-            Vector2Int nextStep = GetNextStep(agent.gridPosition, targetCell);
+            Vector2Int nextStep = Pathfinding.NextStep(agent.gridPosition, targetCell);
             var occupant = GameManager.Instance.GetAgentAtCell(nextStep);
             if (occupant != null && occupant != agent)
                 break;
@@ -207,22 +209,6 @@ public class ActionMenu : MonoBehaviour
         }
     }
 
-    private Vector2Int GetNextStep(Vector2Int current, Vector2Int target)
-    {
-        int dx = target.x - current.x;
-        int dy = target.y - current.y;
-        int stepX = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
-        int stepY = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
-
-        // Move diagonally if possible
-        if (dx != 0 && dy != 0)
-            return new Vector2Int(current.x + stepX, current.y + stepY);
-        if (dx != 0)
-            return new Vector2Int(current.x + stepX, current.y);
-        if (dy != 0)
-            return new Vector2Int(current.x, current.y + stepY);
-        return current;
-    }
 
     private void Update()
     {
